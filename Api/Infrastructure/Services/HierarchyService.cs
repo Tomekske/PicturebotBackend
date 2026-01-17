@@ -1,30 +1,20 @@
 using Api.Application.DTOs;
-using Api.Application.Interfaces; 
+using Api.Application.Interfaces;
 using Api.Core.Entities;
 using Api.Core.Enums;
-using Api.Core.Interfaces; 
+using Api.Core.Interfaces;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
 namespace Api.Infrastructure.Services;
 
-public class HierarchyService : IHierarchyService
+public class HierarchyService(
+    IHierarchyRepository repo,
+    IPictureRepository pictureRepo,
+    ILogger<HierarchyService> logger
+) : IHierarchyService
 {
-    private readonly IHierarchyRepository _repo;
-    private readonly IPictureRepository _pictureRepo;
-    private readonly ILogger<HierarchyService> _logger;
-
-    public HierarchyService(
-        IHierarchyRepository repo, 
-        IPictureRepository pictureRepo, 
-        ILogger<HierarchyService> logger)
-    {
-        _repo = repo;
-        _pictureRepo = pictureRepo;
-        _logger = logger;
-    }
-
     public async Task<Hierarchy> CreateNodeAsync(CreateNodeRequest req)
     {
         if (!Enum.TryParse<HierarchyType>(req.Type, true, out var typeEnum))
@@ -32,11 +22,10 @@ public class HierarchyService : IHierarchyService
             throw new ArgumentException("Invalid hierarchy type");
         }
 
-        // Duplicate Check
         if (typeEnum == HierarchyType.Folder)
         {
             int? pid = req.ParentId == 0 ? null : req.ParentId;
-            if (await _repo.FindDuplicateAsync(pid, req.Name, typeEnum))
+            if (await repo.FindDuplicateAsync(pid, req.Name, typeEnum))
             {
                 throw new InvalidOperationException("a folder with this name already exists here");
             }
@@ -52,11 +41,11 @@ public class HierarchyService : IHierarchyService
 
         if (typeEnum == HierarchyType.Album)
         {
-            newNode.Uuid = Guid.NewGuid().ToString(); 
-            
+            newNode.Uuid = Guid.NewGuid().ToString();
+
             if (!string.IsNullOrEmpty(req.SourcePath))
             {
-                string libraryRoot = @"M:\Picturebot-Test"; 
+                string libraryRoot = @"M:\Picturebot-Test";
                 string albumRoot = Path.Combine(libraryRoot, newNode.Uuid);
 
                 var standardFolders = new[] { "RAWs", "JPGs" };
@@ -77,7 +66,7 @@ public class HierarchyService : IHierarchyService
             }
         }
 
-        await _repo.CreateAsync(newNode);
+        await repo.CreateAsync(newNode);
 
         if (typeEnum == HierarchyType.Album && !string.IsNullOrEmpty(req.SourcePath))
         {
@@ -89,13 +78,13 @@ public class HierarchyService : IHierarchyService
 
     public async Task<List<Hierarchy>> GetFullHierarchyAsync()
     {
-        var allNodes = await _repo.FindAllAsync();
+        var allNodes = await repo.FindAllAsync();
         var nodeMap = allNodes.ToDictionary(n => n.Id);
         var rootNodes = new List<Hierarchy>();
 
         foreach (var node in allNodes)
         {
-            node.Children = new List<Hierarchy>(); 
+            node.Children = new List<Hierarchy>();
 
             if (node.ParentId.HasValue && nodeMap.ContainsKey(node.ParentId.Value))
             {
@@ -112,20 +101,21 @@ public class HierarchyService : IHierarchyService
 
     private async Task ProcessAndImportPicturesAsync(string sourceDir, Hierarchy hierarchy)
     {
-        _logger.LogInformation("Starting import for album {AlbumName}", hierarchy.Name);
-        
+        logger.LogInformation("Starting import for album {AlbumName}", hierarchy.Name);
+
         var dirInfo = new DirectoryInfo(sourceDir);
         if (!dirInfo.Exists) return;
 
         var files = dirInfo.GetFiles().Where(f => !f.Attributes.HasFlag(FileAttributes.Directory));
         var groups = files.GroupBy(f => Path.GetFileNameWithoutExtension(f.Name))
-                          .Select(g => new { 
-                              BaseName = g.Key, 
-                              Files = g.ToList(), 
-                              SortTime = g.Min(f => f.LastWriteTime)
-                          })
-                          .OrderBy(g => g.SortTime)
-                          .ToList();
+            .Select(g => new
+            {
+                BaseName = g.Key,
+                Files = g.ToList(),
+                SortTime = g.Min(f => f.LastWriteTime)
+            })
+            .OrderBy(g => g.SortTime)
+            .ToList();
 
         var subFolderMap = hierarchy.SubFolders.ToDictionary(sf => sf.Name, sf => sf);
         int counter = 1;
@@ -133,7 +123,7 @@ public class HierarchyService : IHierarchyService
         foreach (var group in groups)
         {
             string newIndexStr = counter.ToString("D6");
-            
+
             foreach (var file in group.Files)
             {
                 string ext = file.Extension;
@@ -160,13 +150,13 @@ public class HierarchyService : IHierarchyService
 
                 if (pType == PictureType.Display)
                 {
-                    try 
+                    try
                     {
                         sharpness = CalculateSobelSharpness(destPath);
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogWarning("Image processing failed for {File}: {Error}", destPath, ex.Message);
+                        logger.LogWarning("Image processing failed for {File}: {Error}", destPath, ex.Message);
                     }
                 }
 
@@ -182,16 +172,17 @@ public class HierarchyService : IHierarchyService
                     PHash = pHash
                 };
 
-                await _pictureRepo.CreateAsync(pic);
+                await pictureRepo.CreateAsync(pic);
             }
+
             counter++;
         }
     }
 
     private int CalculateSobelSharpness(string path)
     {
-        using var image = Image.Load<L8>(path); 
-        
+        using var image = Image.Load<L8>(path);
+
         if (image.Width > 600)
         {
             image.Mutate(x => x.Resize(new ResizeOptions
@@ -200,6 +191,7 @@ public class HierarchyService : IHierarchyService
                 Mode = ResizeMode.Max
             }));
         }
-        return 0; 
+
+        return 0;
     }
 }

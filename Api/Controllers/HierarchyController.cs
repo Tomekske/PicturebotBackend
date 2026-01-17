@@ -6,17 +6,8 @@ namespace Api.Controllers;
 
 [ApiController]
 [Route("api/hierarchy")]
-public class HierarchyController : ControllerBase
+public class HierarchyController(IHierarchyService hierarchyService, IPictureService pictureService) : ControllerBase
 {
-    private readonly IHierarchyService _hierarchyService;
-    private readonly IPictureService _pictureService;
-    
-    public HierarchyController(IHierarchyService hierarchyService, IPictureService pictureService)
-    {
-        _hierarchyService = hierarchyService;
-        _pictureService = pictureService;
-    }
-
     [HttpPost]
     public async Task<IActionResult> CreateNode([FromBody] CreateNodeRequest req)
     {
@@ -27,7 +18,7 @@ public class HierarchyController : ControllerBase
 
         try
         {
-            var node = await _hierarchyService.CreateNodeAsync(req);
+            var node = await hierarchyService.CreateNodeAsync(req);
             return CreatedAtAction(nameof(GetHierarchy), new { id = node.Id }, node);
         }
         catch (InvalidOperationException ex) when (ex.Message.Contains("already exists"))
@@ -45,7 +36,7 @@ public class HierarchyController : ControllerBase
     {
         try
         {
-            var tree = await _hierarchyService.GetFullHierarchyAsync();
+            var tree = await hierarchyService.GetFullHierarchyAsync();
             return Ok(tree);
         }
         catch (Exception)
@@ -59,7 +50,7 @@ public class HierarchyController : ControllerBase
     {
         try
         {
-            var groupedPictures = await _pictureService.GroupSimilarPicturesAsync(id, 8);
+            var groupedPictures = await pictureService.GroupSimilarPicturesAsync(id, 8);
             return Ok(groupedPictures);
         }
         catch (Exception)

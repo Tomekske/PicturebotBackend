@@ -3,16 +3,9 @@ using Api.Core.Entities;
 
 namespace Api.Infrastructure.Services;
 
-public class SettingsService : ISettingsService
+public class SettingsService(ISettingsService repo) : ISettingsService
 {
-    private readonly ISettingsService _repo;
+    public async Task<Settings> GetSettingsAsync() => await repo.GetSettingsAsync();
 
-    public SettingsService(ISettingsService repo)
-    {
-        _repo = repo;
-    }
-
-    public async Task<Settings> GetSettingsAsync() => await _repo.GetSettingsAsync();
-
-    public async Task UpdateSettingsAsync(Settings settings) => await _repo.UpdateSettingsAsync(settings);
+    public async Task UpdateSettingsAsync(Settings settings) => await repo.UpdateSettingsAsync(settings);
 }

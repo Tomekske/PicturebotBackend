@@ -3,16 +3,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Api.Infrastructure.Data;
 
-public class ApplicationDBContext : DbContext
+public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> dbContextOptions)
+    : DbContext(dbContextOptions)
 {
-    public ApplicationDBContext(DbContextOptions<ApplicationDBContext> dbContextOptions) : base(dbContextOptions)
-    {
-    }
-    
     public DbSet<Settings> Settings { get; set; }
     public DbSet<Picture> Pictures { get; set; }
     public DbSet<Hierarchy> Hierarchies { get; set; }
-    
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Hierarchy>()

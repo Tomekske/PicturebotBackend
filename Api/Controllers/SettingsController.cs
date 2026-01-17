@@ -21,7 +21,7 @@ public class SettingsController(ISettingsService settingsService) : ControllerBa
             return StatusCode(500, new { error = "Failed to fetch settings" });
         }
     }
-    
+
     [HttpPut]
     public async Task<IActionResult> UpdateSettings([FromBody] Settings req)
     {

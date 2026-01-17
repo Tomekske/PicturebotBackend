@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Api.Core.Entities;
-using Api.Application.Interfaces; 
+using Api.Application.Interfaces;
 
 namespace Api.Controllers;
 
@@ -21,7 +21,7 @@ public class PictureController(IPictureService pictureService) : ControllerBase
             return StatusCode(500, new { error = "Failed to fetch pictures" });
         }
     }
-    
+
     [HttpGet("{id}")]
     public async Task<IActionResult> FindById(int id)
     {
@@ -32,6 +32,7 @@ public class PictureController(IPictureService pictureService) : ControllerBase
             {
                 return NotFound(new { error = "Picture not found" });
             }
+
             return Ok(picture);
         }
         catch (Exception)
@@ -39,7 +40,7 @@ public class PictureController(IPictureService pictureService) : ControllerBase
             return StatusCode(500, new { error = "Internal server error" });
         }
     }
-    
+
     [HttpGet("hierarchy/{id}")]
     public async Task<IActionResult> FindByHierarchyId(int id)
     {
@@ -53,7 +54,7 @@ public class PictureController(IPictureService pictureService) : ControllerBase
             return StatusCode(500, new { error = "Failed to fetch node pictures" });
         }
     }
-    
+
     [HttpPost]
     public async Task<IActionResult> CreatePicture([FromBody] Picture req)
     {
@@ -72,7 +73,7 @@ public class PictureController(IPictureService pictureService) : ControllerBase
             return StatusCode(500, new { error = "Failed to create picture" });
         }
     }
-    
+
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdatePicture(int id, [FromBody] Picture req)
     {

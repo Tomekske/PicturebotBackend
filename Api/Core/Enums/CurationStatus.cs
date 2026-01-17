@@ -4,5 +4,5 @@ public enum CurationStatus
 {
     Unflagged,
     Flagged,
-    Rejected
+    Rejected,
 }

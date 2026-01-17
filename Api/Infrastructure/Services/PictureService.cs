@@ -1,33 +1,25 @@
 using System.Numerics;
-using Api.Application.Interfaces; 
+using Api.Application.Interfaces;
 using Api.Core.Entities;
-using Api.Core.Interfaces; 
+using Api.Core.Interfaces;
 
 namespace Api.Infrastructure.Services;
 
-public class PictureService : IPictureService
+public class PictureService(IPictureRepository repo) : IPictureService
 {
-    private readonly IPictureRepository _repo;
+    public Task CreatePictureAsync(Picture picture) => repo.CreateAsync(picture);
 
-    public PictureService(IPictureRepository repo)
-    {
-        _repo = repo;
-    }
+    public Task<List<Picture>> GetPicturesAsync() => repo.FindAllAsync();
 
-    public Task CreatePictureAsync(Picture picture) => _repo.CreateAsync(picture);
+    public Task<Picture?> FindByIdAsync(int id) => repo.FindByIdAsync(id);
 
-    public Task<List<Picture>> GetPicturesAsync() => _repo.FindAllAsync();
+    public Task<List<Picture>> FindByHierarchyIdAsync(int id) => repo.FindByHierarchyIdAsync(id);
 
-    public Task<Picture?> FindByIdAsync(int id) => _repo.FindByIdAsync(id);
-
-    public Task<List<Picture>> FindByHierarchyIdAsync(int id) => _repo.FindByHierarchyIdAsync(id);
-
-    public Task UpdatePictureAsync(Picture picture) => _repo.UpdateAsync(picture);
+    public Task UpdatePictureAsync(Picture picture) => repo.UpdateAsync(picture);
 
     public async Task<List<List<Picture>>> GroupSimilarPicturesAsync(int hierarchyId, int threshold)
     {
-        // Now calling the repository interface method
-        var pictures = await _repo.FindByHierarchyIdAsync(hierarchyId);
+        var pictures = await repo.FindByHierarchyIdAsync(hierarchyId);
         var groups = new List<List<Picture>>();
 
         foreach (var pic in pictures)

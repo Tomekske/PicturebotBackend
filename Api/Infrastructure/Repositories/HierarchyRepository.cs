@@ -6,24 +6,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Api.Infrastructure.Repositories;
 
-public class HierarchyRepository : IHierarchyRepository
+public class HierarchyRepository(ApplicationDbContext context) : IHierarchyRepository
 {
-    private readonly ApplicationDBContext _context;
-
-    public HierarchyRepository(ApplicationDBContext context)
-    {
-        _context = context;
-    }
-
     public async Task CreateAsync(Hierarchy node)
     {
-        _context.Hierarchies.Add(node);
-        await _context.SaveChangesAsync();
+        context.Hierarchies.Add(node);
+        await context.SaveChangesAsync();
     }
 
     public async Task<List<Hierarchy>> FindAllAsync()
     {
-        return await _context.Hierarchies
+        return await context.Hierarchies
             .AsNoTracking()
             .Include(h => h.SubFolders)
             .ThenInclude(sf => sf.Pictures)
@@ -33,7 +26,7 @@ public class HierarchyRepository : IHierarchyRepository
 
     public async Task<bool> FindDuplicateAsync(int? parentId, string name, HierarchyType type)
     {
-        var query = _context.Hierarchies.AsQueryable();
+        var query = context.Hierarchies.AsQueryable();
 
         if (parentId == null)
             query = query.Where(h => h.ParentId == null);

@@ -8,5 +8,5 @@ public class CreateNodeRequest
     public required string Name { get; set; }
     public required string Type { get; set; }
     public List<SubFolder> SubFolders { get; set; } = [];
-    public string? SourcePath { get; set; } 
+    public string? SourcePath { get; set; }
 }
