@@ -1,0 +1,67 @@
+using System.Numerics;
+using Api.Data.Models;
+using Api.Data.Repositories;
+
+namespace Api.Services;
+
+public class PictureService
+{
+    private readonly PictureRepository _repo;
+
+    public PictureService(PictureRepository repo)
+    {
+        _repo = repo;
+    }
+
+    public Task CreatePictureAsync(Picture picture) => _repo.CreateAsync(picture);
+    public Task<List<Picture>> GetPicturesAsync() => _repo.FindAllAsync();
+    public Task<Picture?> FindByIdAsync(int id) => _repo.FindByIdAsync(id);
+    public Task<List<Picture>> FindByHierarchyIdAsync(int id) => _repo.FindByHierarchyIdAsync(id);
+    public Task UpdatePictureAsync(Picture picture) => _repo.UpdateAsync(picture);
+
+    // Grouping Logic
+    public async Task<List<List<Picture>>> GroupSimilarPicturesAsync(int hierarchyId, int threshold)
+    {
+        var pictures = await _repo.FindByHierarchyIdAsync(hierarchyId);
+        var groups = new List<List<Picture>>();
+
+        foreach (var pic in pictures)
+        {
+            bool foundGroup = false;
+
+            foreach (var group in groups)
+            {
+                // Ensure picture is similar to ALL pictures in the group
+                bool similarToAll = true;
+                foreach (var groupPic in group)
+                {
+                    if (HammingDistance((ulong)pic.PHash, (ulong)groupPic.PHash) > threshold)
+                    {
+                        similarToAll = false;
+                        break;
+                    }
+                }
+
+                if (similarToAll)
+                {
+                    group.Add(pic);
+                    foundGroup = true;
+                    break;
+                }
+            }
+
+            if (!foundGroup)
+            {
+                groups.Add(new List<Picture> { pic });
+            }
+        }
+
+        return groups;
+    }
+
+    private static int HammingDistance(ulong h1, ulong h2)
+    {
+        // .NET built-in hardware accelerated population count
+        return BitOperations.PopCount(h1 ^ h2);
+    }
+}
