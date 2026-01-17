@@ -24,6 +24,7 @@ public class HierarchyRepository : IHierarchyRepository
     public async Task<List<Hierarchy>> FindAllAsync()
     {
         return await _context.Hierarchies
+            .AsNoTracking()
             .Include(h => h.SubFolders)
             .ThenInclude(sf => sf.Pictures)
             .OrderBy(h => h.Name)

@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Api.Application.DTOs;
-using Api.Application.Services;
-using IHierarchyService = Api.Application.Interfaces.IHierarchyService; // Use Interfaces
+using Api.Application.Interfaces;
 
 namespace Api.Controllers;
 

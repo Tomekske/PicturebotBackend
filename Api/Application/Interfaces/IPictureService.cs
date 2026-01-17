@@ -1,6 +1,6 @@
 using Api.Core.Entities;
 
-namespace Api.Application.Services;
+namespace Api.Application.Interfaces;
 
 public interface IPictureService
 {

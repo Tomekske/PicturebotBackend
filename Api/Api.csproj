@@ -22,6 +22,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Folder Include="Application\Services\" />
       <Folder Include="Infrastructure\ImageProcessing\" />
     </ItemGroup>
 

@@ -1,14 +1,13 @@
+using Api.Application.Interfaces;
 using Api.Core.Entities;
-using Api.Infrastructure.Repositories;
-
 
 namespace Api.Infrastructure.Services;
 
-public class SettingsService
+public class SettingsService : ISettingsService
 {
-    private readonly SettingsRepository _repo;
+    private readonly ISettingsService _repo;
 
-    public SettingsService(SettingsRepository repo)
+    public SettingsService(ISettingsService repo)
     {
         _repo = repo;
     }

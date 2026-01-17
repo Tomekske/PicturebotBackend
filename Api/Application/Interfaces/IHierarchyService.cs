@@ -5,9 +5,6 @@ namespace Api.Application.Interfaces;
 
 public interface IHierarchyService
 {
-    // Defines the contract for creating a node
-    Task<Hierarchy> CreateNodeAsync(CreateNodeRequest request);
-
-    // Defines the contract for fetching the tree
+    Task<Hierarchy> CreateNodeAsync(CreateNodeRequest req);
     Task<List<Hierarchy>> GetFullHierarchyAsync();
 }

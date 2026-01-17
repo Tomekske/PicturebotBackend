@@ -5,7 +5,7 @@ namespace Api.Infrastructure.Data;
 
 public class ApplicationDBContext : DbContext
 {
-    public ApplicationDBContext(DbContextOptions dbContextOptions) : base(dbContextOptions)
+    public ApplicationDBContext(DbContextOptions<ApplicationDBContext> dbContextOptions) : base(dbContextOptions)
     {
     }
     
