@@ -1,7 +1,8 @@
-using Api.Data.Models;
-using Api.Data.Repositories;
+using Api.Core.Entities;
+using Api.Infrastructure.Repositories;
 
-namespace Api.Services;
+
+namespace Api.Infrastructure.Services;
 
 public class SettingsService
 {

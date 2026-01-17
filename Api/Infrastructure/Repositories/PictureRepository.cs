@@ -1,13 +1,15 @@
-using Api.Data.Models;
+using Api.Core.Entities;
+using Api.Core.Interfaces;
+using Api.Infrastructure.Data; 
 using Microsoft.EntityFrameworkCore;
 
-namespace Api.Repositories;
+namespace Api.Infrastructure.Repositories;
 
-public class PictureRepository
+public class PictureRepository : IPictureRepository
 {
-    private readonly ApplicationDbContext _context;
+    private readonly ApplicationDBContext _context;
 
-    public PictureRepository(ApplicationDbContext context)
+    public PictureRepository(ApplicationDBContext context)
     {
         _context = context;
     }
@@ -32,7 +34,6 @@ public class PictureRepository
 
     public async Task<List<Picture>> FindByHierarchyIdAsync(int hierarchyId)
     {
-        // Join via SubFolders
         return await _context.Pictures
             .Include(p => p.SubFolder)
             .Where(p => p.SubFolder!.HierarchyId == hierarchyId)

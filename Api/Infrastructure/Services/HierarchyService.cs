@@ -1,20 +1,24 @@
-using Api.Controllers; // For CreateNodeRequest DTO
-using Api.Data.Models;
-using Api.Data.Enums;
-using Api.Data.Repositories;
+using Api.Application.DTOs;
+using Api.Application.Interfaces; 
+using Api.Core.Entities;
+using Api.Core.Enums;
+using Api.Core.Interfaces; 
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
-namespace Api.Services;
+namespace Api.Infrastructure.Services;
 
-public class HierarchyService
+public class HierarchyService : IHierarchyService
 {
-    private readonly HierarchyRepository _repo;
-    private readonly PictureRepository _pictureRepo;
+    private readonly IHierarchyRepository _repo;
+    private readonly IPictureRepository _pictureRepo;
     private readonly ILogger<HierarchyService> _logger;
 
-    public HierarchyService(HierarchyRepository repo, PictureRepository pictureRepo, ILogger<HierarchyService> logger)
+    public HierarchyService(
+        IHierarchyRepository repo, 
+        IPictureRepository pictureRepo, 
+        ILogger<HierarchyService> logger)
     {
         _repo = repo;
         _pictureRepo = pictureRepo;
@@ -23,7 +27,6 @@ public class HierarchyService
 
     public async Task<Hierarchy> CreateNodeAsync(CreateNodeRequest req)
     {
-        // Convert string type to Enum
         if (!Enum.TryParse<HierarchyType>(req.Type, true, out var typeEnum))
         {
             throw new ArgumentException("Invalid hierarchy type");
@@ -32,7 +35,6 @@ public class HierarchyService
         // Duplicate Check
         if (typeEnum == HierarchyType.Folder)
         {
-            // Handle root folders (ParentID 0 or null)
             int? pid = req.ParentId == 0 ? null : req.ParentId;
             if (await _repo.FindDuplicateAsync(pid, req.Name, typeEnum))
             {
@@ -48,14 +50,13 @@ public class HierarchyService
             SubFolders = req.SubFolders
         };
 
-        // Album Logic: UUID and Disk creation
         if (typeEnum == HierarchyType.Album)
         {
-            newNode.Uuid = Guid.NewGuid().ToString(); // V7 is currently standard Guid.CreateVersion7 in .NET 9 preview, standard Guid is fine
+            newNode.Uuid = Guid.NewGuid().ToString(); 
             
             if (!string.IsNullOrEmpty(req.SourcePath))
             {
-                string libraryRoot = @"M:\Picturebot-Test"; // Configurable path ideally
+                string libraryRoot = @"M:\Picturebot-Test"; 
                 string albumRoot = Path.Combine(libraryRoot, newNode.Uuid);
 
                 var standardFolders = new[] { "RAWs", "JPGs" };
@@ -68,7 +69,6 @@ public class HierarchyService
                     });
                 }
 
-                // Create Directories
                 Directory.CreateDirectory(albumRoot);
                 foreach (var sub in newNode.SubFolders)
                 {
@@ -79,11 +79,8 @@ public class HierarchyService
 
         await _repo.CreateAsync(newNode);
 
-        // Import Process
         if (typeEnum == HierarchyType.Album && !string.IsNullOrEmpty(req.SourcePath))
         {
-            // Fire and forget, or await depending on requirement. Usually async background task.
-            // For now, we await it to match Go behavior.
             await ProcessAndImportPicturesAsync(req.SourcePath, newNode);
         }
 
@@ -98,7 +95,6 @@ public class HierarchyService
 
         foreach (var node in allNodes)
         {
-            // Clear children first because EF might have tracked them
             node.Children = new List<Hierarchy>(); 
 
             if (node.ParentId.HasValue && nodeMap.ContainsKey(node.ParentId.Value))
@@ -114,8 +110,6 @@ public class HierarchyService
         return rootNodes;
     }
 
-    // -- Import Logic --
-
     private async Task ProcessAndImportPicturesAsync(string sourceDir, Hierarchy hierarchy)
     {
         _logger.LogInformation("Starting import for album {AlbumName}", hierarchy.Name);
@@ -123,13 +117,12 @@ public class HierarchyService
         var dirInfo = new DirectoryInfo(sourceDir);
         if (!dirInfo.Exists) return;
 
-        // Group files by BaseName
         var files = dirInfo.GetFiles().Where(f => !f.Attributes.HasFlag(FileAttributes.Directory));
         var groups = files.GroupBy(f => Path.GetFileNameWithoutExtension(f.Name))
                           .Select(g => new { 
                               BaseName = g.Key, 
                               Files = g.ToList(), 
-                              SortTime = g.Min(f => f.LastWriteTime) // Simple sort logic
+                              SortTime = g.Min(f => f.LastWriteTime)
                           })
                           .OrderBy(g => g.SortTime)
                           .ToList();
@@ -139,7 +132,7 @@ public class HierarchyService
 
         foreach (var group in groups)
         {
-            string newIndexStr = counter.ToString("D6"); // 000001
+            string newIndexStr = counter.ToString("D6");
             
             foreach (var file in group.Files)
             {
@@ -160,20 +153,16 @@ public class HierarchyService
                 string newFileName = newIndexStr + ext;
                 string destPath = Path.Combine(destFolder.Location, newFileName);
 
-                // Copy File
                 File.Copy(file.FullName, destPath, true);
 
-                // Calculations
                 int sharpness = 0;
                 long pHash = 0;
 
                 if (pType == PictureType.Display)
                 {
-                    // Call Image Processing Helpers
                     try 
                     {
                         sharpness = CalculateSobelSharpness(destPath);
-                        // pHash = CalculatePHash(destPath); // Requires specific pHash lib
                     }
                     catch (Exception ex)
                     {
@@ -199,12 +188,10 @@ public class HierarchyService
         }
     }
 
-    // Simplified Sobel implementation using ImageSharp
     private int CalculateSobelSharpness(string path)
     {
-        using var image = Image.Load<L8>(path); // Load as Grayscale directly
+        using var image = Image.Load<L8>(path); 
         
-        // Resize for performance (similar to Go implementation)
         if (image.Width > 600)
         {
             image.Mutate(x => x.Resize(new ResizeOptions
@@ -213,10 +200,6 @@ public class HierarchyService
                 Mode = ResizeMode.Max
             }));
         }
-
-        // Simplistic gradient calculation placeholder
-        // A full Sobel kernel convolution manually in C# is verbose.
-        // For production, consider using OpenCVSharp or a dedicated filter in ImageSharp.
-        return 0; // Placeholder
+        return 0; 
     }
 }

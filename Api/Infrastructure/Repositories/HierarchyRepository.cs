@@ -1,13 +1,16 @@
-using Api.Data.Models;
-using Api.Data.Enums;
+using Api.Core.Entities;
+using Api.Core.Enums;
+using Api.Core.Interfaces;
+using Api.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
-namespace Api.Repositories;
+namespace Api.Infrastructure.Repositories;
 
-public class HierarchyRepository
+public class HierarchyRepository : IHierarchyRepository
 {
-    private readonly ApplicationDbContext _context;
+    private readonly ApplicationDBContext _context;
 
-    public HierarchyRepository(ApplicationDbContext context)
+    public HierarchyRepository(ApplicationDBContext context)
     {
         _context = context;
     }

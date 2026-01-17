@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Api.Data.Enums;
+using Api.Core.Enums;
 
-namespace Api.Data.Models;
+namespace Api.Core.Entities;
 
 [Table("sub_folders")]
 public class SubFolder
