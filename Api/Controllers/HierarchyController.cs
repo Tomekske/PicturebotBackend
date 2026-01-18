@@ -45,7 +45,7 @@ public class HierarchyController(IHierarchyService hierarchyService, IPictureSer
         }
     }
 
-    [HttpGet("{id}/grouped-pictures")]
+    [HttpGet("{id:int}/grouped-pictures")]
     public async Task<IActionResult> GetGroupedPictures(int id)
     {
         try

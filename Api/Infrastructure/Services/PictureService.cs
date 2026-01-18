@@ -24,26 +24,24 @@ public class PictureService(IPictureRepository repo) : IPictureService
 
         foreach (var pic in pictures)
         {
-            bool foundGroup = false;
+            var foundGroup = false;
 
             foreach (var group in groups)
             {
-                bool similarToAll = true;
+                var similarToAll = true;
                 foreach (var groupPic in group)
                 {
-                    if (HammingDistance((ulong)pic.PHash, (ulong)groupPic.PHash) > threshold)
-                    {
-                        similarToAll = false;
-                        break;
-                    }
-                }
+                    if (HammingDistance((ulong)pic.PHash, (ulong)groupPic.PHash) <= threshold) continue;
 
-                if (similarToAll)
-                {
-                    group.Add(pic);
-                    foundGroup = true;
+                    similarToAll = false;
                     break;
                 }
+
+                if (!similarToAll) continue;
+
+                group.Add(pic);
+                foundGroup = true;
+                break;
             }
 
             if (!foundGroup)

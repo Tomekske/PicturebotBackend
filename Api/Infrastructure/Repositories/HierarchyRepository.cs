@@ -28,10 +28,9 @@ public class HierarchyRepository(ApplicationDbContext context) : IHierarchyRepos
     {
         var query = context.Hierarchies.AsQueryable();
 
-        if (parentId == null)
-            query = query.Where(h => h.ParentId == null);
-        else
-            query = query.Where(h => h.ParentId == parentId);
+        query = parentId == null
+            ? query.Where(h => h.ParentId == null)
+            : query.Where(h => h.ParentId == parentId);
 
         return await query.AnyAsync(h => h.Name == name && h.Type == type);
     }

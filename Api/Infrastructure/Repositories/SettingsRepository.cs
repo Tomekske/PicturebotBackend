@@ -10,12 +10,12 @@ public class SettingsRepository(ApplicationDbContext context) : ISettingsReposit
     public async Task<Settings> GetSettingsAsync()
     {
         var settings = await context.Settings.FirstOrDefaultAsync(s => s.Id == 1);
-        if (settings == null)
-        {
-            settings = new Settings { Id = 1 };
-            context.Settings.Add(settings);
-            await context.SaveChangesAsync();
-        }
+
+        if (settings != null) return settings;
+
+        settings = new Settings { Id = 1 };
+        context.Settings.Add(settings);
+        await context.SaveChangesAsync();
 
         return settings;
     }

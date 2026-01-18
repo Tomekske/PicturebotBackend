@@ -45,8 +45,8 @@ public class HierarchyService(
 
             if (!string.IsNullOrEmpty(req.SourcePath))
             {
-                string libraryRoot = @"M:\Picturebot-Test";
-                string albumRoot = Path.Combine(libraryRoot, newNode.Uuid);
+                const string libraryRoot = @"M:\Picturebot-Test";
+                var albumRoot = Path.Combine(libraryRoot, newNode.Uuid);
 
                 var standardFolders = new[] { "RAWs", "JPGs" };
                 foreach (var fName in standardFolders)
@@ -118,18 +118,18 @@ public class HierarchyService(
             .ToList();
 
         var subFolderMap = hierarchy.SubFolders.ToDictionary(sf => sf.Name, sf => sf);
-        int counter = 1;
+        var counter = 1;
 
         foreach (var group in groups)
         {
-            string newIndexStr = counter.ToString("D6");
+            var newIndexStr = counter.ToString("D6");
 
             foreach (var file in group.Files)
             {
-                string ext = file.Extension;
-                string upperExt = ext.ToUpperInvariant();
-                string targetFolder = "JPGs";
-                PictureType pType = PictureType.Display;
+                var ext = file.Extension;
+                var upperExt = ext.ToUpperInvariant();
+                var targetFolder = "JPGs";
+                var pType = PictureType.Display;
 
                 if (new[] { ".ARW", ".CR2", ".NEF" }.Contains(upperExt))
                 {
@@ -140,13 +140,13 @@ public class HierarchyService(
                 if (!subFolderMap.ContainsKey(targetFolder)) continue;
 
                 var destFolder = subFolderMap[targetFolder];
-                string newFileName = newIndexStr + ext;
-                string destPath = Path.Combine(destFolder.Location, newFileName);
+                var newFileName = newIndexStr + ext;
+                var destPath = Path.Combine(destFolder.Location, newFileName);
 
                 File.Copy(file.FullName, destPath, true);
 
-                int sharpness = 0;
-                long pHash = 0;
+                var sharpness = 0;
+                var pHash = 0;
 
                 if (pType == PictureType.Display)
                 {

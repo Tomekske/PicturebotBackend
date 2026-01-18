@@ -41,7 +41,7 @@ public class PictureController(IPictureService pictureService) : ControllerBase
         }
     }
 
-    [HttpGet("hierarchy/{id}")]
+    [HttpGet("hierarchy/{id:int}")]
     public async Task<IActionResult> FindByHierarchyId(int id)
     {
         try
@@ -74,7 +74,7 @@ public class PictureController(IPictureService pictureService) : ControllerBase
         }
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:int}")]
     public async Task<IActionResult> UpdatePicture(int id, [FromBody] Picture req)
     {
         if (!ModelState.IsValid)

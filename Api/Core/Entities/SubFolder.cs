@@ -7,20 +7,20 @@ namespace Api.Core.Entities;
 [Table("sub_folders")]
 public class SubFolder
 {
-    [Key]
+    [Key] 
     public int Id { get; set; }
 
-    [Column("name")]
+    [Column("name")] 
     public string Name { get; set; } = string.Empty;
 
-    [Column("location")]
+    [Column("location")] 
     public string Location { get; set; } = string.Empty;
 
     // Belongs To Relation (Hierarchy)
-    [Column("hierarchy_id")]
+    [Column("hierarchy_id")] 
     public int HierarchyId { get; set; }
 
-    [ForeignKey(nameof(HierarchyId))]
+    [ForeignKey(nameof(HierarchyId))] 
     public Hierarchy? Hierarchy { get; set; }
 
     // Has Many Relation (Pictures)
@@ -34,19 +34,13 @@ public class SubFolder
     {
         var ext = Path.GetExtension(filename);
         var upperExt = ext.ToUpperInvariant();
-        var pType = PictureType.Unknown;
 
-        switch (upperExt)
+        var pType = upperExt switch
         {
-            case ".JPG":
-            case ".JPEG":
-                pType = PictureType.Display;
-                break;
-            case ".ARW":
-            case ".NEF":
-                pType = PictureType.Raw;
-                break;
-        }
+            ".JPG" or ".JPEG" => PictureType.Display,
+            ".ARW" or ".NEF" => PictureType.Raw,
+            _ => PictureType.Unknown
+        };
 
         var fullPath = Path.Combine(this.Location, filename);
 
