@@ -82,10 +82,15 @@ public class PictureController(IPictureService pictureService) : ControllerBase
             return BadRequest(new { error = "Invalid request body" });
         }
 
-        req.Id = id;
-
         try
         {
+            var existing = await pictureService.FindByIdAsync(id);
+            if (existing == null)
+            {
+                return NotFound(new { error = "Picture not found" });
+            }
+
+            req.Id = id;
             await pictureService.UpdatePictureAsync(req);
             return Ok(req);
         }

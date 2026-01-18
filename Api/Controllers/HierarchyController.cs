@@ -19,7 +19,7 @@ public class HierarchyController(IHierarchyService hierarchyService, IPictureSer
         try
         {
             var node = await hierarchyService.CreateNodeAsync(req);
-            return CreatedAtAction(nameof(GetHierarchy), new { id = node.Id }, node);
+            return Ok(node);
         }
         catch (InvalidOperationException ex) when (ex.Message.Contains("already exists"))
         {

@@ -1,4 +1,8 @@
+using Api.Application.Interfaces;
+using Api.Core.Interfaces;
 using Api.Infrastructure.Data;
+using Api.Infrastructure.Repositories;
+using Api.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
@@ -10,6 +14,16 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+
+// Register repositories
+builder.Services.AddScoped<IHierarchyRepository, HierarchyRepository>();
+builder.Services.AddScoped<IPictureRepository, PictureRepository>();
+builder.Services.AddScoped<ISettingsRepository, SettingsRepository>();
+
+// Register services
+builder.Services.AddScoped<IHierarchyService, HierarchyService>();
+builder.Services.AddScoped<IPictureService, PictureService>();
+builder.Services.AddScoped<ISettingsService, SettingsService>();
 
 var app = builder.Build();
 
