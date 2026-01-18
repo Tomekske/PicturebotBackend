@@ -1,18 +1,11 @@
-using Api.Data.Models;
-using Api.Data.Repositories;
+using Api.Application.Interfaces;
+using Api.Core.Entities;
 
-namespace Api.Services;
+namespace Api.Infrastructure.Services;
 
-public class SettingsService
+public class SettingsService(ISettingsService repo) : ISettingsService
 {
-    private readonly SettingsRepository _repo;
+    public async Task<Settings> GetSettingsAsync() => await repo.GetSettingsAsync();
 
-    public SettingsService(SettingsRepository repo)
-    {
-        _repo = repo;
-    }
-
-    public async Task<Settings> GetSettingsAsync() => await _repo.GetSettingsAsync();
-
-    public async Task UpdateSettingsAsync(Settings settings) => await _repo.UpdateSettingsAsync(settings);
+    public async Task UpdateSettingsAsync(Settings settings) => await repo.UpdateSettingsAsync(settings);
 }

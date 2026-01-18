@@ -1,6 +1,61 @@
+using Microsoft.AspNetCore.Mvc;
+using Api.Application.DTOs;
+using Api.Application.Interfaces;
+
 namespace Api.Controllers;
 
-public class HierarchyController
+[ApiController]
+[Route("api/hierarchy")]
+public class HierarchyController(IHierarchyService hierarchyService, IPictureService pictureService) : ControllerBase
 {
-    
+    [HttpPost]
+    public async Task<IActionResult> CreateNode([FromBody] CreateNodeRequest req)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(new { error = "Invalid request body" });
+        }
+
+        try
+        {
+            var node = await hierarchyService.CreateNodeAsync(req);
+            return Ok(node);
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("already exists"))
+        {
+            return Conflict(new { error = ex.Message });
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { error = "Failed to create node" });
+        }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetHierarchy()
+    {
+        try
+        {
+            var tree = await hierarchyService.GetFullHierarchyAsync();
+            return Ok(tree);
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { error = "Failed to build hierarchy" });
+        }
+    }
+
+    [HttpGet("{id:int}/grouped-pictures")]
+    public async Task<IActionResult> GetGroupedPictures(int id)
+    {
+        try
+        {
+            var groupedPictures = await pictureService.GroupSimilarPicturesAsync(id, 8);
+            return Ok(groupedPictures);
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { error = "Failed to group pictures" });
+        }
+    }
 }

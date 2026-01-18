@@ -1,8 +1,8 @@
 using Api.Core.Entities;
 
-namespace Api.Core.Interfaces;
+namespace Api.Application.Interfaces;
 
-public interface ISettingsRepository
+public interface ISettingsService
 {
     Task<Settings> GetSettingsAsync();
     Task UpdateSettingsAsync(Settings settings);
