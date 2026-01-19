@@ -41,7 +41,7 @@ public class HierarchyService(
 
         if (typeEnum == HierarchyType.Album)
         {
-            newNode.Uuid = Guid.NewGuid().ToString();
+            newNode.Uuid = Guid.CreateVersion7().ToString();
 
             if (!string.IsNullOrEmpty(req.SourcePath))
             {
@@ -57,7 +57,7 @@ public class HierarchyService(
                         Location = Path.Combine(albumRoot, fName)
                     });
                 }
-
+                
                 Directory.CreateDirectory(albumRoot);
                 foreach (var sub in newNode.SubFolders)
                 {

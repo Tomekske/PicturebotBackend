@@ -1,9 +1,10 @@
 using Api.Application.Interfaces;
 using Api.Core.Entities;
+using Api.Core.Interfaces;
 
 namespace Api.Infrastructure.Services;
 
-public class SettingsService(ISettingsService repo) : ISettingsService
+public class SettingsService(ISettingsRepository repo) : ISettingsService
 {
     public async Task<Settings> GetSettingsAsync() => await repo.GetSettingsAsync();
 
