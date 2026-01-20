@@ -40,7 +40,7 @@ public class Picture
     public int Sharpness { get; set; }
 
     [JsonPropertyName("phash")]
-    public long PHash { get; set; }
+    public ulong PHash { get; set; }
     
     // Foreign Key to SubFolder
     [Column("sub_folder_id")]

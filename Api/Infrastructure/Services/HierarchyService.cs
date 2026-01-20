@@ -1,11 +1,14 @@
+using System.Diagnostics;
 using Api.Application.DTOs;
 using Api.Application.Interfaces;
 using Api.Core.Entities;
 using Api.Core.Enums;
 using Api.Core.Interfaces;
+using CoenM.ImageHash.HashAlgorithms;
+using OpenCvSharp;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
+using Size = OpenCvSharp.Size;
 
 namespace Api.Infrastructure.Services;
 
@@ -57,7 +60,7 @@ public class HierarchyService(
                         Location = Path.Combine(albumRoot, fName)
                     });
                 }
-                
+
                 Directory.CreateDirectory(albumRoot);
                 foreach (var sub in newNode.SubFolders)
                 {
@@ -70,7 +73,12 @@ public class HierarchyService(
 
         if (typeEnum == HierarchyType.Album && !string.IsNullOrEmpty(req.SourcePath))
         {
+            var sw = Stopwatch.StartNew();
             await ProcessAndImportPicturesAsync(req.SourcePath, newNode);
+            logger.LogInformation("Import took {TotalSeconds:F0} seconds ({Min} min and {Sec} s)", 
+                sw.Elapsed.TotalSeconds, 
+                sw.Elapsed.Minutes, 
+                sw.Elapsed.Seconds);
         }
 
         return newNode;
@@ -146,12 +154,13 @@ public class HierarchyService(
                 File.Copy(file.FullName, destPath, true);
 
                 var sharpness = 0;
-                var pHash = 0;
+                var pHash = 0UL;
 
                 if (pType == PictureType.Display)
                 {
                     try
                     {
+                        pHash = HashImage(destPath);
                         sharpness = CalculateSobelSharpness(destPath);
                     }
                     catch (Exception ex)
@@ -179,19 +188,51 @@ public class HierarchyService(
         }
     }
 
+    private static ulong HashImage(string filename)
+    {
+        var hashAlgorithm = new PerceptualHash();
+        
+        using (var image = Image.Load<Rgba32>(filename))
+        {
+            return hashAlgorithm.Hash(image);
+        }
+    }
+
     private int CalculateSobelSharpness(string path)
     {
-        using var image = Image.Load<L8>(path);
+        // 1. Load image as Grayscale immediately (ImreadModes.Grayscale)
+        using OpenCvSharp.Mat src = Cv2.ImRead(path, ImreadModes.Grayscale);
 
-        if (image.Width > 600)
+        // 2. Resize if needed
+        // OpenCV resizing is extremely fast.
+        if (src.Width > 600)
         {
-            image.Mutate(x => x.Resize(new ResizeOptions
-            {
-                Size = new Size(600, 0),
-                Mode = ResizeMode.Max
-            }));
+            double scale = 600.0 / src.Width;
+            Cv2.Resize(src, src, new Size(0, 0), scale, scale);
         }
 
-        return 0;
+        // 3. Compute Sobel gradients
+        // We compute derivatives in x and y directions
+        using Mat dx = new Mat();
+        using Mat dy = new Mat();
+
+        // ddepth: CV_16S (16-bit signed) to avoid overflow during calculation
+        Cv2.Sobel(src, dx, MatType.CV_16S, 1, 0, ksize: 3);
+        Cv2.Sobel(src, dy, MatType.CV_16S, 0, 1, ksize: 3);
+
+        // 4. Calculate Magnitude
+        // Convert back to absolute values and add them (Approximation) or use Magnitude function
+        using Mat absDx = new Mat();
+        using Mat absDy = new Mat();
+        Cv2.ConvertScaleAbs(dx, absDx);
+        Cv2.ConvertScaleAbs(dy, absDy);
+
+        using Mat edges = new Mat();
+        Cv2.AddWeighted(absDx, 0.5, absDy, 0.5, 0, edges);
+
+        // 5. Get the average intensity (The Sharpness Score)
+        OpenCvSharp.Scalar mean = Cv2.Mean(edges);
+
+        return (int)mean.Val0;
     }
 }
