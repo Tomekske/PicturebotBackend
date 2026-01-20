@@ -3,6 +3,8 @@ using Api.Application.Interfaces;
 using Api.Core.Entities;
 using Api.Core.Enums;
 using Api.Core.Interfaces;
+using CoenM.ImageHash;
+using CoenM.ImageHash.HashAlgorithms;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
@@ -146,12 +148,15 @@ public class HierarchyService(
                 File.Copy(file.FullName, destPath, true);
 
                 var sharpness = 0;
-                var pHash = 0;
+                var pHash = 0UL;
+                
+
 
                 if (pType == PictureType.Display)
                 {
                     try
                     {
+                        pHash = HashImage(destPath);
                         sharpness = CalculateSobelSharpness(destPath);
                     }
                     catch (Exception ex)
@@ -176,6 +181,15 @@ public class HierarchyService(
             }
 
             counter++;
+        }
+    }
+    
+    private static ulong HashImage(string filename)
+    {
+        var hashAlgorithm = new PerceptualHash();
+        using (var stream = File.OpenRead(filename))
+        {
+            return hashAlgorithm.Hash(stream);
         }
     }
 

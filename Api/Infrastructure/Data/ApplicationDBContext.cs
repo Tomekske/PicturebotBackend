@@ -28,5 +28,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> dbConte
         modelBuilder.Entity<Settings>().HasData(
             new Settings { Id = 1, ThemeMode = "system", LibraryPath = "" }
         );
+        
+        // This line tells EF Core: 
+        // "In C# treat PHash as ulong, but in the DB store it as a long."
+        modelBuilder.Entity<Picture>()
+            .Property(p => p.PHash)
+            .HasConversion<long>();
     }
 }
